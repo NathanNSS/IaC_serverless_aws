@@ -1,0 +1,63 @@
+service: aws-node-serverless
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:Get*
+            - dynamodb:Scan*
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - arn:aws:dynamodb:us-east-2:553997108565:table/ItemTable
+functions:
+  api:
+    handler: /src/index.handler
+    events:
+      - httpApi:
+          path: /
+          method: get
+  createItem:
+    handler: src/create_item.js
+    events:
+      - httpApi:
+          path: /item
+          method: post
+  fetchItems:
+    handler: src/fetch_items.js
+    events:
+      - httpApi:
+          path: /items
+          method: get
+  fetchItemByID:
+    handler: src/fetch_item_id.js
+    events:
+      - httpApi:
+          path: /item/{id}
+          method: get
+  updateItem:
+    handler: src/update_item.js
+    events:
+      - httpApi:
+          path: /item/{id}
+          method: put
+resources:
+  Resources:
+    ItemTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ItemTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
